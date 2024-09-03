@@ -1,4 +1,4 @@
-package com.myorg;
+package com.infra;
 
 import software.amazon.awscdk.Stack;
 import software.amazon.awscdk.StackProps;

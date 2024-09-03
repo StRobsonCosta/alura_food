@@ -1,4 +1,4 @@
-package com.myorg;
+package com.infra;
 
 import software.amazon.awscdk.*;
 import software.amazon.awscdk.services.ec2.*;
