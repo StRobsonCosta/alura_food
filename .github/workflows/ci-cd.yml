@@ -36,6 +36,14 @@ jobs:
         uses: actions/setup-java@v3
         with:
           java-version: '17'
+          java-package: jdk
+    	  distribution: temurin  # Escolha a distribuição desejada
+          check-latest: false
+          server-id: github
+    	  server-username: ${{ github.actor }}  # Nome do usuário que executa a ação
+    	  server-password: ${{ secrets.GITHUB_TOKEN }}  # Token gerado automaticamente
+    	  overwrite-settings: true
+    	  job-status: success
 
       - name: Build with Maven
         run: mvn clean install --file ./pom.xml
@@ -65,6 +73,11 @@ jobs:
         env:
           KUBECONFIG: ${{ secrets.KUBECONFIG }}
         run: |
-          kubectl apply -f k8s/deployment.yml
-          kubectl apply -f k8s/service.yml
+          kubectl apply -f k8s/mysql.yaml && \
+          kubectl apply -f k8s/secrets.yaml && \
+          kubectl apply -f k8s/configmap.yaml && \
+          kubectl apply -f k8s/volumes.yaml && \
+          kubectl apply -f k8s/services.yaml && \
+          kubectl apply -f k8s/app.yaml && \
+          kubectl apply -f k8s/loadbalancer.yaml
 
