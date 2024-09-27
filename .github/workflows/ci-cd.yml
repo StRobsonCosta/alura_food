@@ -3,10 +3,12 @@ name: CI-CD Pipeline
 on:
   push:
     branches:
-      - main
+      - master
+      - kubernetes
   pull_request:
     branches:
       - main
+      - kubernetes
 
 jobs:
   build:
