@@ -17,7 +17,7 @@ It is a [Maven](https://maven.apache.org/) based project, so you can open this p
 
 Enjoy!
 
--- Passo a Passo AWS deste Projeto:
+## Passo a Passo AWS deste Projeto:
 - Comandos:
 cdk bootstrap
 Criar Repositório privado no ECR e ver comando para trazer imagem (docker push 905418058817.dkr.ecr.us-east-1.amazonaws.com/img-pedidos-ms:latest)
