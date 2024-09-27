@@ -2,19 +2,19 @@ version: '3'
 services:
   mysql:
     image: mysql:8
-    container_name: mysql
+    container_name: mysql_alr
     environment:
       MYSQL_ROOT_PASSWORD: root
-      #MYSQL_USER: root
-      #MYSQL_PASSWORD: root
+      MYSQL_PASSWORD: root
     ports:
       - "3306:3306"
     volumes:
       - mysql-data:/var/lib/mysql
+      - ./mysql-init:/docker-entrypoint-initdb.d 
 
   rabbitmq:
     image: rabbitmq:3-management
-    container_name: rabbitmq
+    container_name: rabbitmq_alr
     ports:
       - "5672:5672"
       - "15672:15672"
@@ -50,8 +50,8 @@ services:
       - mysql
       - rabbitmq
 
-  api-pagamento:
-    build: ./pagamento
+  api-pagamentos:
+    build: ./pagamentos
     ports:
       - "40000:40000"
     environment:
