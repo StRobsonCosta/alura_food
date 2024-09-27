@@ -32,7 +32,7 @@ build/
 ### VS Code ###
 .vscode/
 
-
+kubeconfig.yml
 .env
 .idea/
 .metadata/
