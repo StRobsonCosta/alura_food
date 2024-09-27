@@ -1,69 +1,40 @@
-name: CI-CD Pipeline
+name: CI/CD Pipeline
 
 on:
   push:
     branches:
-      - main
-  pull_request:
-    branches:
-      - main
+      - master
+      - kubernetes  # Incluir aqui a branch que acionará o pipeline completo
 
 jobs:
   build:
     runs-on: ubuntu-latest
-    services:
-      mysql:
-        image: mysql:8
-        env:
-          MYSQL_ROOT_PASSWORD: root
-          MYSQL_USER: root
-          MYSQL_PASSWORD: root
-        ports:
-          - 3306:3306
-        options: --health-cmd "mysqladmin ping --silent" --health-interval 10s --health-timeout 5s --health-retries 3
-      rabbitmq:
-        image: rabbitmq:3-management
-        ports:
-          - 5672:5672
-          - 15672:15672
 
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v3
+    - name: Checkout source code
+      uses: actions/checkout@v2
 
-      - name: Set up JDK 17
-        uses: actions/setup-java@v3
-        with:
-          java-version: '17'
+    # Build a Docker image
+    - name: Build Docker image
+      run: |
+        docker build -t my-app:latest .
 
-      - name: Build with Maven
-        run: mvn clean install --file ./pom.xml
+    # Log in to DockerHub
+    - name: Log in to DockerHub
+      run: |
+        echo "${{ secrets.DOCKER_PASSWORD }}" | docker login -u "${{ secrets.DOCKER_USERNAME }}" --password-stdin
 
-      - name: Run Unit Tests
-        run: mvn test --file ./pom.xml
+    # Tag and push the Docker image to DockerHub
+    - name: Push Docker image to DockerHub
+      run: |
+        docker tag my-app:latest ${{ secrets.DOCKER_USERNAME }}/my-app:latest
+        docker push ${{ secrets.DOCKER_USERNAME }}/my-app:latest
 
-      - name: Docker Login
-        run: echo "${{ secrets.DOCKER_PASSWORD }}" | docker login -u "${{ secrets.DOCKER_USERNAME }}" --password-stdin
-
-      - name: Build Docker Images
-        run: |
-          docker-compose -f docker-compose.yml build
-
-      - name: Push Docker Images
-        run: |
-          docker-compose -f docker-compose.yml push
-
-  deploy:
-    needs: build
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v3
-
-      - name: Deploy to Kubernetes
-        env:
-          KUBECONFIG: ${{ secrets.KUBECONFIG }}
-        run: |
-          kubectl apply -f k8s/deployment.yml
-          kubectl apply -f k8s/service.yml
+    # Test and Deploy to Kubernetes only on the 'kubernetes' branch
+    - name: Deploy to Kubernetes
+      if: github.ref == 'refs/heads/kubernetes'  # Condição para rodar apenas na branch 'kubernetes'
+      env:
+        KUBECONFIG: ${{ secrets.KUBECONFIG }}
+      run: |
+        kubectl apply -f k8s/deployment.yml
 
