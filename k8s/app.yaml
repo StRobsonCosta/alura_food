@@ -16,7 +16,7 @@ spec:
     spec:
       containers:
       - name: gateway
-        image: leonardosartorello/java-gateway-k8s:v3
+        image: strobson/java-gateway-k8s:v4
         ports:
         - containerPort: 80
         env:
@@ -45,7 +45,7 @@ spec:
       hostname: pagamentos-ms
       containers:
       - name: pagamentos
-        image: leonardosartorello/java-pagamentos-k8s:v3
+        image: strobson/java-pagamentos-k8s:v4
         ports:
         - containerPort: 4000
         env:
@@ -89,9 +89,53 @@ spec:
       hostname: pedidos-ms
       containers:
       - name: pedidos
-        image: leonardosartorello/java-pedidos-k8s:v3
+        image: strobson/java-pedidos-k8s:v4
         ports:
         - containerPort: 40001
+        env:
+        - name: SERVER_HOST
+          valueFrom:
+            configMapKeyRef:
+              name: dados
+              key: SERVER_HOST
+        - name: DB_HOST
+          valueFrom:
+            configMapKeyRef:
+              name: dados
+              key: DB_HOST
+        - name: DB_USER
+          valueFrom:
+            secretKeyRef:
+              name: senhas
+              key: DB_USER
+        - name: DB_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: senhas
+              key: DB_PASSWORD
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: avaliacao
+  labels:
+    app: avaliacao
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: avaliacao
+  template:
+    metadata:
+      labels:
+        app: avaliacao
+    spec:
+      hostname: avaliacao-ms
+      containers:
+      - name: avaliacao
+        image: strobson/java-avaliacao-k8s:v4
+        ports:
+        - containerPort: 40003
         env:
         - name: SERVER_HOST
           valueFrom:
@@ -133,7 +177,7 @@ spec:
       terminationGracePeriodSeconds: 10
       containers:
       - name: server
-        image: leonardosartorello/java-server-k8s:v3
+        image: strobson/java-server-k8s:v4
         ports:
         - containerPort: 8081
           name: server
@@ -143,3 +187,33 @@ spec:
             configMapKeyRef:
               name: dados
               key: SERVER_HOST
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: rabbitmq
+  labels:
+    app: rabbitmq
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: rabbitmq
+  template:
+    metadata:
+      labels:
+        app: rabbitmq
+    spec:
+      containers:
+      - name: rabbitmq
+        image: rabbitmq:3.10-management
+        ports:
+        - containerPort: 5672  # Porta de comunicação para os microserviços
+          name: amqp
+        - containerPort: 15672 # Porta de gerenciamento web (se você precisar acessar a UI)
+          name: management
+        env:
+        - name: RABBITMQ_DEFAULT_USER
+          value: "guest"  # Usuário padrão para o RabbitMQ
+        - name: RABBITMQ_DEFAULT_PASS
+          value: "guest"  # Senha padrão para o RabbitMQ
