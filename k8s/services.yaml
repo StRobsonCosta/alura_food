@@ -1,0 +1,91 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: mysql
+  labels:
+    app: mysql
+spec:
+  ports:
+  - port: 3306
+    name: mysql
+  clusterIP: None
+  selector:
+    app: mysql
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: server
+  labels:
+    app: server
+spec:
+  ports:
+  - port: 8081
+    name: server
+  clusterIP: None
+  selector:
+    app: server
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: pagamentos-ms
+  labels:
+    app: pagamentos
+spec:
+  ports:
+  - port: 40000
+    name: pagamentos-ms
+  clusterIP: None
+  selector:
+    app: pagamentos
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: pedidos-ms
+  labels:
+    app: pedidos
+spec:
+  ports:
+  - port: 40001
+    name: pedidos-ms
+  clusterIP: None
+  selector:
+    app: pedidos
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: avaliacao-ms
+  labels:
+    app: avaliacao
+spec:
+  ports:
+  - port: 40003
+    name: avaliacao-ms
+  clusterIP: None
+  selector:
+    app: avaliacao
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: rabbitmq
+  labels:
+    app: rabbitmq
+spec:
+  type: NodePort  # Define que o serviço deve ser acessível externamente via NodePort
+  ports:
+    - name: amqp
+      port: 5672
+      targetPort: 5672
+      protocol: TCP
+      nodePort: 30000  # Porta exposta externamente para AMQP
+    - name: management
+      port: 15672
+      targetPort: 15672
+      protocol: TCP
+      nodePort: 30001  # Porta exposta externamente para a UI de gerenciamento
+  selector:
+    app: rabbitmq
