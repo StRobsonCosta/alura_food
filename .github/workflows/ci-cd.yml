@@ -37,13 +37,13 @@ jobs:
         with:
           java-version: '17'
           java-package: jdk
-    	  distribution: temurin  # Escolha a distribuição desejada
+          distribution: temurin  # Escolha a distribuição desejada
           check-latest: false
           server-id: github
-    	  server-username: ${{ github.actor }}  # Nome do usuário que executa a ação
-    	  server-password: ${{ secrets.GITHUB_TOKEN }}  # Token gerado automaticamente
-    	  overwrite-settings: true
-    	  job-status: success
+          server-username: ${{ github.actor }}  # Nome do usuário que executa a ação
+          server-password: ${{ secrets.GITHUB_TOKEN }}  # Token gerado automaticamente
+          overwrite-settings: true
+          job-status: success
 
       - name: Build with Maven
         run: mvn clean install --file ./pom.xml
