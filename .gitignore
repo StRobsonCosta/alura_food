@@ -37,3 +37,4 @@ build/
 .idea/
 .metadata/
 .sonarlint/
+kubeconfig.yml
