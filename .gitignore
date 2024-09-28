@@ -37,3 +37,5 @@ kubeconfig.yml
 .idea/
 .metadata/
 .sonarlint/
+rabbit/
+
