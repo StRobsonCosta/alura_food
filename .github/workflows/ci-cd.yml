@@ -17,6 +17,9 @@ jobs:
     steps:
     - name: Checkout source code
       uses: actions/checkout@v3
+      
+    - name: Wait for MySQL
+        run: ./scripts/wait-for-it.sh localhost:3306 --timeout=30 --strict -- echo "MySQL is up"  
 
     # Set up JDK 17
     - name: Set up JDK 17
