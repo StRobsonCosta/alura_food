@@ -31,6 +31,9 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
+        
+      - name: Wait for MySQL
+        run: ./scripts/wait-for-it.sh localhost:3306 --timeout=30 --strict -- echo "MySQL is up"  
 
       - name: Set up JDK 17
         uses: actions/setup-java@v3
@@ -60,20 +63,20 @@ jobs:
       - name: Build Avaliacao Service
         run: mvn clean install --file ./avaliacao/pom.xml
 
-      - name: Run Unit Tests for Server Service
-        run: mvn test --file ./server/pom.xml || true
+      #- name: Run Unit Tests for Server Service
+       # run: mvn test --file ./server/pom.xml || true
         
-      - name: Run Unit Tests for Gateway Service
-        run: mvn test --file ./gateway/pom.xml || true
+      #- name: Run Unit Tests for Gateway Service
+       # run: mvn test --file ./gateway/pom.xml || true
         
-      - name: Run Unit Tests for Pedidos Service
-        run: mvn test --file ./pedidos/pom.xml || true
+      #- name: Run Unit Tests for Pedidos Service
+       # run: mvn test --file ./pedidos/pom.xml || true
         
-      - name: Run Unit Tests for Pagamentos Service
-        run: mvn test --file ./pagamentos/pom.xml || true
+      #- name: Run Unit Tests for Pagamentos Service
+       # run: mvn test --file ./pagamentos/pom.xml || true
         
-      - name: Run Unit Tests for Avaliacao Service
-        run: mvn test --file ./avalicacao/pom.xml || true        
+      #- name: Run Unit Tests for Avaliacao Service
+       # run: mvn test --file ./avalicacao/pom.xml || true        
   
       - name: Docker Login
         run: echo "${{ secrets.DOCKER_PASSWORD }}" | docker login -u "${{ secrets.DOCKER_USERNAME }}" --password-stdin
