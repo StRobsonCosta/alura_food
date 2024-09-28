@@ -1,13 +1,13 @@
-name: CI-CD Pipeline
+name: CI/CD Pipeline
 
 on:
   push:
     branches:
       - master
-      - kubernetes
+      - kubernetes  # Incluir aqui a branch que acionará o pipeline completo
   pull_request:
     branches:
-      - main
+      - master
       - kubernetes
 
 jobs:
@@ -29,65 +29,93 @@ jobs:
           - 15672:15672
 
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v3
-        
-      - name: Wait for MySQL
-        run: ./scripts/wait-for-it.sh localhost:3306 --timeout=30 --strict -- echo "MySQL is up"  
+    - name: Checkout source code
+      uses: actions/checkout@v3
+      
+    - name: Wait for MySQL
+      run: ./scripts/wait-for-it.sh localhost:3306 --timeout=30 --strict -- echo "MySQL is up"  
 
-      - name: Set up JDK 17
-        uses: actions/setup-java@v3
-        with:
-          java-version: '17'
-          java-package: jdk
-          distribution: temurin  # Escolha a distribuição desejada
-          check-latest: false
-          server-id: github
-          server-username: ${{ github.actor }}  # Nome do usuário que executa a ação
-          server-password: ${{ secrets.GITHUB_TOKEN }}  # Token gerado automaticamente
-          overwrite-settings: true
-          job-status: success
+    # Set up JDK 17
+    - name: Set up JDK 17
+      uses: actions/setup-java@v3
+      with:
+        java-version: '17'
+        java-package: jdk
+        distribution: temurin  # Escolha a distribuição desejada
 
-      - name: Build Server Service
-        run: mvn clean install --file ./server/pom.xml
-        
-      - name: Build Gateway Service
-        run: mvn clean install --file ./gateway/pom.xml
-        
-      - name: Build Pedidos Service
-        run: mvn clean install --file ./pedidos/pom.xml
-        
-      - name: Build Pagamentos Service
-        run: mvn clean install --file ./pagamentos/pom.xml
-        
-      - name: Build Avaliacao Service
-        run: mvn clean install --file ./avaliacao/pom.xml
+    # Build services
+    - name: Build Server Service
+      run: mvn clean install --file ./server/pom.xml
+      env:
+        SERVER_HOST: ${{ secrets.SERVER_HOST }}
 
-      #- name: Run Unit Tests for Server Service
-       # run: mvn test --file ./server/pom.xml || true
-        
-      #- name: Run Unit Tests for Gateway Service
-       # run: mvn test --file ./gateway/pom.xml || true
-        
-      #- name: Run Unit Tests for Pedidos Service
-       # run: mvn test --file ./pedidos/pom.xml || true
-        
-      #- name: Run Unit Tests for Pagamentos Service
-       # run: mvn test --file ./pagamentos/pom.xml || true
-        
-      #- name: Run Unit Tests for Avaliacao Service
-       # run: mvn test --file ./avalicacao/pom.xml || true        
-  
-      - name: Docker Login
-        run: echo "${{ secrets.DOCKER_PASSWORD }}" | docker login -u "${{ secrets.DOCKER_USERNAME }}" --password-stdin
+    - name: Build Gateway Service
+      run: mvn clean install --file ./gateway/pom.xml
+      env:
+        SERVER_HOST: ${{ secrets.SERVER_HOST }}
 
-      - name: Build Docker Images
-        run: |
-          docker-compose -f docker-compose.yml build
+    - name: Build Pedidos Service
+      run: mvn clean install --file ./pedidos/pom.xml
+      env:
+        DB_HOST: ${{ secrets.DB_HOST }}
+        SERVER_HOST: ${{ secrets.SERVER_HOST }}
+        DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
+        DB_USER: ${{ secrets.DB_USER }}
+        AMQP_HOST: ${{ secrets.AMQP_HOST }}
+        AMQP_USER: ${{ secrets.AMQP_USER }}
+        AMQP_PASSWORD: ${{ secrets.AMQP_PASSWORD }}
 
-      - name: Push Docker Images
-        run: |
-          docker-compose -f docker-compose.yml push
+    - name: Build Pagamentos Service
+      run: mvn clean install --file ./pagamentos/pom.xml
+      env:
+        DB_HOST: ${{ secrets.DB_HOST }}
+        SERVER_HOST: ${{ secrets.SERVER_HOST }}
+        DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
+        DB_USER: ${{ secrets.DB_USER }}
+        AMQP_HOST: ${{ secrets.AMQP_HOST }}
+        AMQP_USER: ${{ secrets.AMQP_USER }}
+        AMQP_PASSWORD: ${{ secrets.AMQP_PASSWORD }}
+
+    - name: Build Avaliacao Service
+      run: mvn clean install --file ./avaliacao/pom.xml
+      env:        
+        AMQP_HOST: ${{ secrets.AMQP_HOST }}
+        AMQP_USER: ${{ secrets.AMQP_USER }}
+        AMQP_PASSWORD: ${{ secrets.AMQP_PASSWORD }}
+
+    # Run Unit Tests
+    #- name: Run Unit Tests for Server Service
+     # run: mvn test --file ./server/pom.xml || true
+
+    #- name: Run Unit Tests for Gateway Service
+     # run: mvn test --file ./gateway/pom.xml || true
+
+    #- name: Run Unit Tests for Pedidos Service
+    #  run: mvn test --file ./pedidos/pom.xml || true
+
+    #- name: Run Unit Tests for Pagamentos Service
+     # run: mvn test --file ./pagamentos/pom.xml || true
+
+   # - name: Run Unit Tests for Avaliacao Service
+    #  run: mvn test --file ./avaliacao/pom.xml || true
+
+    # Docker Login
+    - name: Log in to DockerHub
+      uses: docker/login-action@v2
+      with:
+        username: ${{ secrets.DOCKER_USERNAME }}
+        password: ${{ secrets.DOCKER_PASSWORD }}        
+      
+    # Set up Docker Buildx (includes Docker Compose functionality)
+    - name: Set up Docker Buildx
+      uses: docker/setup-buildx-action@v2    
+
+    # Build and Push Docker Images
+    - name: Build and push Docker images  
+      uses: docker/compose-action@v2  
+      with:  
+        compose-file: './docker-compose.yaml'  
+        push: true  
 
   deploy:
     needs: build
@@ -96,15 +124,16 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v3
 
+      # Deploy to Kubernetes only on the 'kubernetes' branch
       - name: Deploy to Kubernetes
+        if: github.ref == 'refs/heads/kubernetes'  # Condição para rodar apenas na branch 'kubernetes'
         env:
           KUBECONFIG: ${{ secrets.KUBECONFIG }}
         run: |
-          kubectl apply -f k8s/mysql.yaml && \
-          kubectl apply -f k8s/secrets.yaml && \
-          kubectl apply -f k8s/configmap.yaml && \
-          kubectl apply -f k8s/volumes.yaml && \
-          kubectl apply -f k8s/services.yaml && \
-          kubectl apply -f k8s/app.yaml && \
+          kubectl apply -f k8s/mysql.yaml
+          kubectl apply -f k8s/secrets.yaml
+          kubectl apply -f k8s/configmap.yaml
+          kubectl apply -f k8s/volumes.yaml
+          kubectl apply -f k8s/services.yaml
+          kubectl apply -f k8s/app.yaml
           kubectl apply -f k8s/loadbalancer.yaml
-
