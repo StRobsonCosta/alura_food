@@ -84,20 +84,60 @@ jobs:
         AMQP_PASSWORD: ${{ secrets.AMQP_PASSWORD }}
 
     # Run Unit Tests
-    #- name: Run Unit Tests for Server Service
-     # run: mvn test --file ./server/pom.xml || true
+    - name: Run Unit Tests for Server Service
+      run: mvn test --file ./server/pom.xml || true
+      env:
+        DB_HOST: ${{ secrets.DB_HOST }}
+        SERVER_HOST: ${{ secrets.SERVER_HOST }}
+        DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
+        DB_USER: ${{ secrets.DB_USER }}
+        AMQP_HOST: ${{ secrets.AMQP_HOST }}
+        AMQP_USER: ${{ secrets.AMQP_USER }}
+        AMQP_PASSWORD: ${{ secrets.AMQP_PASSWORD }}
 
-    #- name: Run Unit Tests for Gateway Service
-     # run: mvn test --file ./gateway/pom.xml || true
+    - name: Run Unit Tests for Gateway Service
+      run: mvn test --file ./gateway/pom.xml || true
+      env:
+        DB_HOST: ${{ secrets.DB_HOST }}
+        SERVER_HOST: ${{ secrets.SERVER_HOST }}
+        DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
+        DB_USER: ${{ secrets.DB_USER }}
+        AMQP_HOST: ${{ secrets.AMQP_HOST }}
+        AMQP_USER: ${{ secrets.AMQP_USER }}
+        AMQP_PASSWORD: ${{ secrets.AMQP_PASSWORD }}
 
-    #- name: Run Unit Tests for Pedidos Service
-    #  run: mvn test --file ./pedidos/pom.xml || true
+    - name: Run Unit Tests for Pedidos Service
+      run: mvn test --file ./pedidos/pom.xml || true
+      env:
+        DB_HOST: ${{ secrets.DB_HOST }}
+        SERVER_HOST: ${{ secrets.SERVER_HOST }}
+        DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
+        DB_USER: ${{ secrets.DB_USER }}
+        AMQP_HOST: ${{ secrets.AMQP_HOST }}
+        AMQP_USER: ${{ secrets.AMQP_USER }}
+        AMQP_PASSWORD: ${{ secrets.AMQP_PASSWORD }}
 
-    #- name: Run Unit Tests for Pagamentos Service
-     # run: mvn test --file ./pagamentos/pom.xml || true
+    - name: Run Unit Tests for Pagamentos Service
+      run: mvn test --file ./pagamentos/pom.xml || true
+      env:
+        DB_HOST: ${{ secrets.DB_HOST }}
+        SERVER_HOST: ${{ secrets.SERVER_HOST }}
+        DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
+        DB_USER: ${{ secrets.DB_USER }}
+        AMQP_HOST: ${{ secrets.AMQP_HOST }}
+        AMQP_USER: ${{ secrets.AMQP_USER }}
+        AMQP_PASSWORD: ${{ secrets.AMQP_PASSWORD }}
 
-   # - name: Run Unit Tests for Avaliacao Service
-    #  run: mvn test --file ./avaliacao/pom.xml || true
+    - name: Run Unit Tests for Avaliacao Service
+      run: mvn test --file ./avaliacao/pom.xml || true
+      env:
+        DB_HOST: ${{ secrets.DB_HOST }}
+        SERVER_HOST: ${{ secrets.SERVER_HOST }}
+        DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
+        DB_USER: ${{ secrets.DB_USER }}
+        AMQP_HOST: ${{ secrets.AMQP_HOST }}
+        AMQP_USER: ${{ secrets.AMQP_USER }}
+        AMQP_PASSWORD: ${{ secrets.AMQP_PASSWORD }}
 
     # Docker Login
     - name: Log in to DockerHub
