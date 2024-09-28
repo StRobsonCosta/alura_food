@@ -89,11 +89,11 @@ jobs:
     # Build and Push Docker Images
     - name: Build Docker Images
       run: |
-        docker-compose -f docker-compose.yml build
+        docker-compose -f docker-compose.yaml build
 
     - name: Push Docker Images
       run: |
-        docker-compose -f docker-compose.yml push
+        docker-compose -f docker-compose.yaml push
 
   deploy:
     needs: build
