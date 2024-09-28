@@ -43,20 +43,20 @@ jobs:
       run: mvn clean install --file ./avaliacao/pom.xml
 
     # Run Unit Tests
-    - name: Run Unit Tests for Server Service
-      run: mvn test --file ./server/pom.xml || true
+    #- name: Run Unit Tests for Server Service
+     # run: mvn test --file ./server/pom.xml || true
 
-    - name: Run Unit Tests for Gateway Service
-      run: mvn test --file ./gateway/pom.xml || true
+    #- name: Run Unit Tests for Gateway Service
+     # run: mvn test --file ./gateway/pom.xml || true
 
-    - name: Run Unit Tests for Pedidos Service
-      run: mvn test --file ./pedidos/pom.xml || true
+    #- name: Run Unit Tests for Pedidos Service
+    #  run: mvn test --file ./pedidos/pom.xml || true
 
-    - name: Run Unit Tests for Pagamentos Service
-      run: mvn test --file ./pagamentos/pom.xml || true
+    #- name: Run Unit Tests for Pagamentos Service
+     # run: mvn test --file ./pagamentos/pom.xml || true
 
-    - name: Run Unit Tests for Avaliacao Service
-      run: mvn test --file ./avaliacao/pom.xml || true
+   # - name: Run Unit Tests for Avaliacao Service
+    #  run: mvn test --file ./avaliacao/pom.xml || true
 
     # Docker Login
     - name: Log in to DockerHub
