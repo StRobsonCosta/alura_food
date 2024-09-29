@@ -59,7 +59,7 @@ pipeline {
 
         stage('Deploy to Docker') {
             when {
-                branch 'master' // Executa essa etapa apenas se a branch for 'master'
+                expression { env.BRANCH_NAME.contains('master') } // Executa essa etapa apenas se a branch for 'master'
             }
             steps {
                 script {
