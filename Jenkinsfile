@@ -81,13 +81,13 @@ pipeline {
                 script {
                     // Aplica os YAMLs de configuração no Kubernetes (Minikube)
                     sh '''
-                    kubectl apply -f k8s/app.yaml
-                    kubectl apply -f k8s/configmap.yaml
-                    kubectl apply -f k8s/loadbalancer.yaml
-                    kubectl apply -f k8s/mysql.yaml
-                    kubectl apply -f k8s/secrets.yaml
-                    kubectl apply -f k8s/services.yaml
-                    kubectl apply -f k8s/volumes.yaml
+                    kubectl apply -f ./k8s/secrets.yaml
+                    kubectl apply -f ./k8s/configmap.yaml
+                    kubectl apply -f ./k8s/mysql.yaml
+                    kubectl apply -f ./k8s/volumes.yaml
+                    kubectl apply -f ./k8s/loadbalancer.yaml
+                    kubectl apply -f ./k8s/services.yaml
+                    kubectl apply -f ./k8s/app.yaml
                     '''
                 }
             }
