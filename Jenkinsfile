@@ -6,6 +6,7 @@ pipeline {
         DOCKER_HUB_NAMESPACE = 'strobson' // Namespace no Docker Hub              
         K8S_CONTEXT = 'minikube' // Contexto do Kubernetes (minikube no caso)
         SLACK_CHANNEL = '#pipeline-alurafood' // Canal do Slack
+        BRANCH_NAME = "${env.GIT_BRANCH ?: 'unknown'}" // Definindo um valor padrão para BRANCH_NAME
     }
     
     stages {
@@ -128,15 +129,15 @@ pipeline {
             steps {
                 script {
                     def status = currentBuild.result ?: 'SUCCESS'
-                    def message = "Pipeline Status: ${status} in branch: ${env.BRANCH_NAME}"
-                    
+                    def message = "Pipeline Status: ${status} in branch: ${BRANCH_NAME}"
+
                     // Se a branch for kubernetes, adicione o link do dashboard
-                    if (env.BRANCH_NAME == 'kubernetes') {
-                        message += "\nMinikube Dashboard: http://192.168.0.106:30000/"
+                    if (BRANCH_NAME == 'kubernetes') {
+                        message += "\nMinikube Dashboard: http://192.168.99.100:30000/"
                     }
 
                     // Se a branch for master, adicione o link do pedido
-                    if (env.BRANCH_NAME == 'master') {
+                    if (BRANCH_NAME == 'master') {
                         message += "\nPedidos Service: http://localhost:8082/pedidos-ms/pedidos"
                     }
 
@@ -151,7 +152,7 @@ pipeline {
         always {
             script {
                 // Verifica se estamos na branch 'kubernetes'
-                if (env.BRANCH_NAME == 'kubernetes') {
+                if (BRANCH_NAME == 'kubernetes') {
                     // Exibe o estado dos pods apenas na branch 'kubernetes'
                     sh 'kubectl get pods -o wide'
 
