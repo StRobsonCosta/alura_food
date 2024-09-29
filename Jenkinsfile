@@ -102,7 +102,7 @@ pipeline {
             }
             steps {
                 script {
-                    if (env.BRANCH_NAME == 'kubernetes') {
+                    if (env.BRANCH_NAME.contains('kubernetes')) {
                         // Verifica o status dos pods no Minikube
                         sh 'kubectl get pods -o wide'
                         // Verifica o status dos serviços
@@ -129,7 +129,7 @@ pipeline {
             steps {
                 script {
                     def status = currentBuild.result ?: 'SUCCESS'
-                    def message = "Pipeline Status: ${status} in branch: ${BRANCH_NAME}"
+                    def message = "Pipeline Status: ${status} in branch: ${BRANCH_NAME.replace('origin/', '')}"
 
                     // Se a branch for kubernetes, adicione o link do dashboard
                     if (BRANCH_NAME == 'kubernetes') {
