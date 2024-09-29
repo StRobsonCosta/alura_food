@@ -1,6 +1,6 @@
 pipeline {
     agent any
-    
+
     environment {
         DOCKER_HUB_CREDENTIALS = 'docker_credential' // Substitua pelo ID das credenciais do Docker Hub no Jenkins
         DOCKER_HUB_NAMESPACE = 'strobson' // Namespace no Docker Hub              
@@ -8,7 +8,7 @@ pipeline {
         SLACK_CHANNEL = '#pipeline-alurafood' // Canal do Slack
         BRANCH_NAME = "${env.GIT_BRANCH ?: 'unknown'}" // Definindo um valor padrão para BRANCH_NAME
     }
-    
+
     stages {
         stage('Checkout Code') {
             steps {
@@ -63,11 +63,18 @@ pipeline {
             }
             steps {
                 script {
-                    // Aqui você pode rodar os containers no Docker
-                    def services = ['server', 'gateway', 'pagamentos', 'pedidos', 'avaliacao']
+                    // Define a ordem de inicialização e as portas correspondentes
+                    def services = [
+                        ['name': 'server', 'port': '8081'],
+                        ['name': 'gateway', 'port': '8082'],
+                        ['name': 'pagamentos', 'port': '40000'],
+                        ['name': 'pedidos', 'port': '40001'],
+                        ['name': 'avaliacao', 'port': '40008'] // Defina a porta correta para avaliação se necessário
+                    ]
+
+                    // Executa o deploy de cada serviço na ordem correta
                     services.each { service ->
-                        // Executa o deploy de cada serviço
-                        sh "docker run -d -p 8087:8086 ${DOCKER_HUB_NAMESPACE}/java-${service}-k8s:v1-J"
+                        sh "docker run -d -p ${service.port}:${service.port} ${DOCKER_HUB_NAMESPACE}/java-${service.name}-k8s:v1-J"
                     }
                 }
             }
@@ -81,13 +88,13 @@ pipeline {
                 script {
                     // Aplica os YAMLs de configuração no Kubernetes (Minikube)
                     sh '''
-                    kubectl apply -f k8s/app.yaml
-                    kubectl apply -f k8s/configmap.yaml
-                    kubectl apply -f k8s/loadbalancer.yaml
-                    kubectl apply -f k8s/mysql.yaml
-                    kubectl apply -f k8s/secrets.yaml
-                    kubectl apply -f k8s/services.yaml
-                    kubectl apply -f k8s/volumes.yaml
+                    kubectl apply -f ./k8s/secrets.yaml
+                    kubectl apply -f ./k8s/configmap.yaml
+                    kubectl apply -f ./k8s/mysql.yaml
+                    kubectl apply -f ./k8s/volumes.yaml
+                    kubectl apply -f ./k8s/loadbalancer.yaml
+                    kubectl apply -f ./k8s/services.yaml
+                    kubectl apply -f ./k8s/app.yaml
                     '''
                 }
             }
@@ -132,12 +139,12 @@ pipeline {
                     def message = "Pipeline Status: ${status} in branch: ${BRANCH_NAME.replace('origin/', '')}"
 
                     // Se a branch for kubernetes, adicione o link do dashboard
-                    if (expression { env.BRANCH_NAME.contains('kubernetes') } ) {
+                    if (env.BRANCH_NAME.contains('kubernetes')) {
                         message += "\nMinikube Dashboard: http://192.168.99.100:30000/"
                     }
 
                     // Se a branch for master, adicione o link do pedido
-                    if (expression { env.BRANCH_NAME.contains('master') } ) {
+                    if (env.BRANCH_NAME.contains('master')) {
                         message += "\nPedidos Service: http://localhost:8082/pedidos-ms/pedidos"
                     }
 
@@ -152,7 +159,7 @@ pipeline {
         always {
             script {
                 // Verifica se estamos na branch 'kubernetes'
-                if (expression { env.BRANCH_NAME.contains('kubernetes') } ) {
+                if (env.BRANCH_NAME.contains('kubernetes')) {
                     // Exibe o estado dos pods apenas na branch 'kubernetes'
                     sh 'kubectl get pods -o wide'
 
