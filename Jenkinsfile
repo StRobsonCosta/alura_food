@@ -23,7 +23,7 @@ pipeline {
                     def services = ['server', 'gateway', 'pagamentos', 'pedidos', 'avaliacao']
                     services.each { service ->
                         // Compila cada microserviço
-                        sh "docker build -t ${DOCKER_HUB_NAMESPACE}/java-${service}-k8s:v3 ${service}/."
+                        sh "docker build -t ${DOCKER_HUB_NAMESPACE}/java-${service}-k8s:v1-J ${service}/."
                     }
                 }
             }
@@ -37,7 +37,7 @@ pipeline {
                         def services = ['server', 'gateway', 'pagamentos', 'pedidos', 'avaliacao']
                         services.each { service ->
                             // Push das imagens para o Docker Hub
-                            sh "docker push ${DOCKER_HUB_NAMESPACE}/java-${service}-k8s:v3"
+                            sh "docker push ${DOCKER_HUB_NAMESPACE}/java-${service}-k8s:v1-J"
                         }
                     }
                 }
