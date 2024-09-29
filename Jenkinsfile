@@ -5,6 +5,7 @@ pipeline {
         DOCKER_HUB_CREDENTIALS = 'docker_credential' // Substitua pelo ID das credenciais do Docker Hub no Jenkins
         DOCKER_HUB_NAMESPACE = 'strobson' // Namespace no Docker Hub              
         K8S_CONTEXT = 'minikube' // Contexto do Kubernetes (minikube no caso)
+        SLACK_CHANNEL = '#pipeline-alurafood' // Canal do Slack
     }
     
     stages {
@@ -43,17 +44,33 @@ pipeline {
             }
         }
 
-	stage('Push Docker Images to DockerHub') {
-	    steps {
-		script {
-		    def services = ['server', 'gateway', 'pagamentos', 'pedidos', 'avaliacao']
-		    services.each { service ->
-		        // Push das imagens para o Docker Hub
-		        sh "docker push ${DOCKER_HUB_NAMESPACE}/java-${service}-k8s:v1-J"
-		    }
-		}
-	    }
-	}
+        stage('Push Docker Images to DockerHub') {
+            steps {
+                script {
+                    def services = ['server', 'gateway', 'pagamentos', 'pedidos', 'avaliacao']
+                    services.each { service ->
+                        // Push das imagens para o Docker Hub
+                        sh "docker push ${DOCKER_HUB_NAMESPACE}/java-${service}-k8s:v1-J"
+                    }
+                }
+            }
+        }
+
+        stage('Deploy to Docker') {
+            when {
+                branch 'master' // Executa essa etapa apenas se a branch for 'master'
+            }
+            steps {
+                script {
+                    // Aqui você pode rodar os containers no Docker
+                    def services = ['server', 'gateway', 'pagamentos', 'pedidos', 'avaliacao']
+                    services.each { service ->
+                        // Executa o deploy de cada serviço
+                        sh "docker run -d -p 8082:8082 ${DOCKER_HUB_NAMESPACE}/java-${service}-k8s:v1-J"
+                    }
+                }
+            }
+        }
 
         stage('Deploy to Kubernetes') {
             when {
@@ -77,13 +94,23 @@ pipeline {
 
         stage('Verify Deployment') {
             when {
-                branch 'kubernetes' // Executa essa etapa apenas se a branch for 'kubernetes'
+                anyOf {
+                    branch 'kubernetes' // Executa essa etapa apenas se a branch for 'kubernetes'
+                    branch 'master' // Também executa na branch 'master'
+                }
             }
             steps {
-                // Verifica o status dos pods no Minikube
-                sh 'kubectl get pods -o wide'
-                // Verifica o status dos serviços
-                sh 'kubectl get services'
+                script {
+                    if (env.BRANCH_NAME == 'kubernetes') {
+                        // Verifica o status dos pods no Minikube
+                        sh 'kubectl get pods -o wide'
+                        // Verifica o status dos serviços
+                        sh 'kubectl get services'
+                    } else {
+                        // Caso seja a branch master, pode fazer uma verificação se necessário
+                        echo "Deployment to Docker completed for branch master."
+                    }
+                }
             }
         }
         
@@ -91,41 +118,64 @@ pipeline {
             when {
                 branch 'kubernetes' // Executa essa etapa apenas se a branch for 'kubernetes'
             }
-	    steps {
-		// Inicia o túnel do Minikube
-		sh 'minikube tunnel --bind-address=192.168.0.106 &'
-	    }
-	}
-    }
+            steps {
+                // Inicia o túnel do Minikube
+                sh 'minikube tunnel --bind-address=192.168.0.106 &'
+            }
+        }
 
-    post {
-       always {
-        script {
-            // Verifica se estamos na branch 'kubernetes'
-            if (env.BRANCH_NAME == 'kubernetes') {
-                // Exibe o estado dos pods apenas na branch 'kubernetes'
-                sh 'kubectl get pods -o wide'
+        stage('Notify Slack') {
+            steps {
+                script {
+                    def status = currentBuild.result ?: 'SUCCESS'
+                    def message = "Pipeline Status: ${status} in branch: ${env.BRANCH_NAME}"
+                    
+                    // Se a branch for kubernetes, adicione o link do dashboard
+                    if (env.BRANCH_NAME == 'kubernetes') {
+                        message += "\nMinikube Dashboard: http://192.168.0.106:30000/"
+                    }
 
-                try {
-                    // Coleta os logs apenas na branch 'kubernetes'
-                    sh 'kubectl logs -l app=server || true'
-                    sh 'kubectl logs -l app=gateway || true'
-                } catch (Exception e) {
-                    echo "Failed to collect logs: ${e.message}"
+                    // Se a branch for master, adicione o link do pedido
+                    if (env.BRANCH_NAME == 'master') {
+                        message += "\nPedidos Service: http://localhost:8082/pedidos-ms/pedidos"
+                    }
+
+                    // Envia a mensagem ao Slack
+                    slackSend(channel: SLACK_CHANNEL, message: message)
                 }
-            } else {
-                // Executa uma ação alternativa se estiver na branch 'master'
-                echo "Not on 'kubernetes' branch, skipping log collection."
             }
         }
     }
 
-    success {
-        echo 'Deploy completed successfully.'
-    }
+    post {
+        always {
+            script {
+                // Verifica se estamos na branch 'kubernetes'
+                if (env.BRANCH_NAME == 'kubernetes') {
+                    // Exibe o estado dos pods apenas na branch 'kubernetes'
+                    sh 'kubectl get pods -o wide'
 
-    failure {
-        echo 'Deploy failed. Check the logs.'
+                    try {
+                        // Coleta os logs apenas na branch 'kubernetes'
+                        sh 'kubectl logs -l app=server || true'
+                        sh 'kubectl logs -l app=gateway || true'
+                    } catch (Exception e) {
+                        echo "Failed to collect logs: ${e.message}"
+                    }
+                } else {
+                    // Executa uma ação alternativa se estiver na branch 'master'
+                    echo "Not on 'kubernetes' branch, skipping log collection."
+                }
+            }
+        }
+
+        success {
+            echo 'Deploy completed successfully.'
+        }
+
+        failure {
+            echo 'Deploy failed. Check the logs.'
+        }
     }
 }
 
