@@ -67,7 +67,7 @@ pipeline {
                     def services = ['server', 'gateway', 'pagamentos', 'pedidos', 'avaliacao']
                     services.each { service ->
                         // Executa o deploy de cada serviço
-                        sh "docker run -d -p 8086:8086 ${DOCKER_HUB_NAMESPACE}/java-${service}-k8s:v1-J"
+                        sh "docker run -d -p 8087:8086 ${DOCKER_HUB_NAMESPACE}/java-${service}-k8s:v1-J"
                     }
                 }
             }
