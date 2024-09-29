@@ -99,21 +99,33 @@ pipeline {
     }
 
     post {
-        always {
-            script {
-                // Coleta os logs dos pods como pós-execução
-                sh 'kubectl logs -l app=server'
-                sh 'kubectl logs -l app=gateway'
+       always {
+        script {
+            // Verifica se estamos na branch 'kubernetes'
+            if (env.BRANCH_NAME == 'kubernetes') {
+                // Exibe o estado dos pods apenas na branch 'kubernetes'
+                sh 'kubectl get pods -o wide'
+
+                try {
+                    // Coleta os logs apenas na branch 'kubernetes'
+                    sh 'kubectl logs -l app=server || true'
+                    sh 'kubectl logs -l app=gateway || true'
+                } catch (Exception e) {
+                    echo "Failed to collect logs: ${e.message}"
+                }
+            } else {
+                // Executa uma ação alternativa se estiver na branch 'master'
+                echo "Not on 'kubernetes' branch, skipping log collection."
             }
         }
+    }
 
-        success {
-            echo 'Deploy completed successfully.'
-        }
+    success {
+        echo 'Deploy completed successfully.'
+    }
 
-        failure {
-            echo 'Deploy failed. Check the logs.'
-        }
+    failure {
+        echo 'Deploy failed. Check the logs.'
     }
 }
 
