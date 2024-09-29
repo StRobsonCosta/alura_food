@@ -66,7 +66,7 @@ pipeline {
                     // Define a ordem de inicialização e as portas correspondentes
                     def services = [
                         ['name': 'server', 'port': '8081'],
-                        ['name': 'gateway', 'port': '8082'],
+                        ['name': 'gateway', 'port': '8083'],
                         ['name': 'pagamentos', 'port': '40000'],
                         ['name': 'pedidos', 'port': '40001'],
                         ['name': 'avaliacao', 'port': '40008'] // Defina a porta correta para avaliação se necessário
