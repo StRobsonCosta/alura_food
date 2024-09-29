@@ -4,6 +4,8 @@ pipeline {
     environment {
         DOCKER_HUB_CREDENTIALS = 'dockerhub' // Substitua pelo ID das credenciais do Docker Hub no Jenkins
         DOCKER_HUB_NAMESPACE = 'strobson' // Namespace no Docker Hub
+        DOCKER_HUB_PASSWORD = 'docker-pwd'
+        DOCKER_HUB_USERNAME = 'st.robson.costa@gmail.com'        
         K8S_CONTEXT = 'minikube' // Contexto do Kubernetes (minikube no caso)
     }
     
