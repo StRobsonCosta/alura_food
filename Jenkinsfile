@@ -56,6 +56,9 @@ pipeline {
 	}
 
         stage('Deploy to Kubernetes') {
+            when {
+                branch 'kubernetes' // Executa essa etapa apenas se a branch for 'kubernetes'
+            }
             steps {
                 script {
                     // Aplica os YAMLs de configuração no Kubernetes (Minikube)
@@ -73,6 +76,9 @@ pipeline {
         }
 
         stage('Verify Deployment') {
+            when {
+                branch 'kubernetes' // Executa essa etapa apenas se a branch for 'kubernetes'
+            }
             steps {
                 // Verifica o status dos pods no Minikube
                 sh 'kubectl get pods -o wide'
@@ -82,6 +88,9 @@ pipeline {
         }
         
         stage('Minikube Tunnel') {
+            when {
+                branch 'kubernetes' // Executa essa etapa apenas se a branch for 'kubernetes'
+            }
 	    steps {
 		// Inicia o túnel do Minikube
 		sh 'minikube tunnel --bind-address=192.168.0.106 &'
