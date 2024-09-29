@@ -67,7 +67,7 @@ pipeline {
                     def services = ['server', 'gateway', 'pagamentos', 'pedidos', 'avaliacao']
                     services.each { service ->
                         // Executa o deploy de cada serviço
-                        sh "docker run -d -p 8082:8082 ${DOCKER_HUB_NAMESPACE}/java-${service}-k8s:v1-J"
+                        sh "docker run -d -p 8086:8086 ${DOCKER_HUB_NAMESPACE}/java-${service}-k8s:v1-J"
                     }
                 }
             }
@@ -75,7 +75,7 @@ pipeline {
 
         stage('Deploy to Kubernetes') {
             when {
-                branch 'kubernetes' // Executa essa etapa apenas se a branch for 'kubernetes'
+                expression { env.BRANCH_NAME.contains('kubernetes') }  // Executa essa etapa apenas se a branch for 'kubernetes'
             }
             steps {
                 script {
@@ -96,8 +96,8 @@ pipeline {
         stage('Verify Deployment') {
             when {
                 anyOf {
-                    branch 'kubernetes' // Executa essa etapa apenas se a branch for 'kubernetes'
-                    branch 'master' // Também executa na branch 'master'
+                    expression { env.BRANCH_NAME.contains('kubernetes') }  // Executa essa etapa apenas se a branch for 'kubernetes'
+                    expression { env.BRANCH_NAME.contains('master') }  // Também executa na branch 'master'
                 }
             }
             steps {
@@ -117,7 +117,7 @@ pipeline {
         
         stage('Minikube Tunnel') {
             when {
-                branch 'kubernetes' // Executa essa etapa apenas se a branch for 'kubernetes'
+                expression { env.BRANCH_NAME.contains('kubernetes') } // Executa essa etapa apenas se a branch for 'kubernetes'
             }
             steps {
                 // Inicia o túnel do Minikube
@@ -132,12 +132,12 @@ pipeline {
                     def message = "Pipeline Status: ${status} in branch: ${BRANCH_NAME.replace('origin/', '')}"
 
                     // Se a branch for kubernetes, adicione o link do dashboard
-                    if (BRANCH_NAME == 'kubernetes') {
+                    if (expression { env.BRANCH_NAME.contains('kubernetes') } ) {
                         message += "\nMinikube Dashboard: http://192.168.99.100:30000/"
                     }
 
                     // Se a branch for master, adicione o link do pedido
-                    if (BRANCH_NAME == 'master') {
+                    if (expression { env.BRANCH_NAME.contains('master') } ) {
                         message += "\nPedidos Service: http://localhost:8082/pedidos-ms/pedidos"
                     }
 
@@ -152,7 +152,7 @@ pipeline {
         always {
             script {
                 // Verifica se estamos na branch 'kubernetes'
-                if (BRANCH_NAME == 'kubernetes') {
+                if (expression { env.BRANCH_NAME.contains('kubernetes') } ) {
                     // Exibe o estado dos pods apenas na branch 'kubernetes'
                     sh 'kubectl get pods -o wide'
 
