@@ -2,7 +2,7 @@ pipeline {
     agent any
     
     environment {
-        DOCKER_HUB_CREDENTIALS = 'dockerhub-credentials' // Substitua pelo ID das credenciais do Docker Hub no Jenkins
+        DOCKER_HUB_CREDENTIALS = 'dockerhub' // Substitua pelo ID das credenciais do Docker Hub no Jenkins
         DOCKER_HUB_NAMESPACE = 'strobson' // Namespace no Docker Hub
         K8S_CONTEXT = 'minikube' // Contexto do Kubernetes (minikube no caso)
     }
@@ -11,7 +11,9 @@ pipeline {
         stage('Checkout Code') {
             steps {
                 // Clona o código fonte da branch
-                git branch: 'master', url: 'https://seu-repositorio-git.git'
+                git branch: 'master', 
+                    url: 'git@github.com:StRobsonCosta/alura_food.git',
+                    credentialsId: 'github-ssh'
             }
         }
 
