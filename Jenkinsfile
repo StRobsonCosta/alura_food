@@ -2,7 +2,7 @@ pipeline {
     agent any
     
     environment {
-        DOCKER_HUB_CREDENTIALS = 'docker_credential' // Substitua pelo ID das credenciais do Docker Hub no Jenkins
+        DOCKER_HUB_CREDENTIALS = 'dockerhub' // Substitua pelo ID das credenciais do Docker Hub no Jenkins
         DOCKER_HUB_NAMESPACE = 'strobson' // Namespace no Docker Hub
         K8S_CONTEXT = 'minikube' // Contexto do Kubernetes (minikube no caso)
     }
@@ -29,20 +29,27 @@ pipeline {
             }
         }
 
-        stage('Push Docker Images to DockerHub') {
-            steps {
-                script {
-                    // Login no Docker Hub
-                    docker.withRegistry('https://registry.hub.docker.com', DOCKER_HUB_CREDENTIALS) {
-                        def services = ['server', 'gateway', 'pagamentos', 'pedidos', 'avaliacao']
-                        services.each { service ->
-                            // Push das imagens para o Docker Hub
-                            sh "docker push ${DOCKER_HUB_NAMESPACE}/java-${service}-k8s:v1-J"
-                        }
-                    }
-                }
-            }
-        }
+        stage('Docker Login') {
+	    steps {
+		script {
+		    sh """
+		    echo "${DOCKER_HUB_PASSWORD}" | docker login -u "${DOCKER_HUB_USERNAME}" --password-stdin
+		    """
+		}
+	    }
+	}
+
+	stage('Push Docker Images to DockerHub') {
+	    steps {
+		script {
+		    def services = ['server', 'gateway', 'pagamentos', 'pedidos', 'avaliacao']
+		    services.each { service ->
+		        // Push das imagens para o Docker Hub
+		        sh "docker push ${DOCKER_HUB_NAMESPACE}/java-${service}-k8s:v1-J"
+		    }
+		}
+	    }
+	}
 
         stage('Deploy to Kubernetes') {
             steps {
