@@ -59,7 +59,7 @@ pipeline {
 
         stage('Deploy to Docker') {
             when {
-                expression { env.BRANCH_NAME == 'master' } // Executa essa etapa apenas se a branch for 'master'
+                expression { env.BRANCH_NAME.contains('master') } // Executa essa etapa apenas se a branch for 'master'
             }
             steps {
                 script {
@@ -144,7 +144,7 @@ pipeline {
                     }
 
                     // Se a branch for master, adicione o link do pedido
-                    if (env.BRANCH_NAME == 'master') {
+                    if (env.BRANCH_NAME.contains('master')) {
                         message += "\nPedidos Service: http://localhost:8082/pedidos-ms/pedidos"
                     }
 
